@@ -4,7 +4,15 @@ Ground floor commercial, first floor residential, terrace at second floor level.
 
 Gallery: see the GitHub Pages link in the repository description. Full sheets are in `docs/plans/`.
 
-## What was asked and how it is met
+
+## Update: north-facing set (road on the 15.4 ft north side)
+12 plans in `docs/north/`, built by `src/layouts_n.py`, `src/render_n.py`, `src/gen_n.py`.
+- 2 bedrooms on the first floor, each with an attached toilet, plus living-dining, kitchen, open court, passage.
+- Services duct 4'-0" x 3'-11" (15.7 sq ft), open to sky, between the kitchen and the toilet, ground to terrace, for water, waste, soil, vent, gas and electrical risers. Kitchen window and toilet ventilator open into it.
+- Every sheet lists clear room sizes in feet-inches, has dimension chains A to D, and a door and window schedule.
+- Kitchen falls in the east third (vastu compromise) so that kitchen, duct and toilet stay stacked together.
+
+## What was asked and how it is met (first set, all facings)
 - Front as big as possible: the shop shutter is 9'-0" wide, the stair door 3'-0", the rest of the 15'-4.8" front is wall piers.
 - Stair starts at the front: its own street door, entry lobby, then two straight flights along the left party wall (ground to first, first to terrace). Own entrance means the shop and the home never share a door.
 - No parking built.

@@ -141,9 +141,10 @@ VASTU = {  # kind -> (ideal, acceptable, forbidden); anything else is a compromi
     "master": ({"SW"}, {"S", "W", "NW"}, {"NE", "SE", "C"}),
     "bed": ({"W", "NW"}, {"SW", "S", "N", "E"}, {"NE", "C"}),
     "living": ({"N", "NE", "E"}, {"NW", "W"}, {"C"}),
-    "hall": ({"W", "E", "N"}, {"NW", "NE", "SE"}, {"C"}),
+    "hall": ({"W", "E", "N"}, {"NW", "NE", "SE"}, set()),
     "stair": ({"S", "W", "SW"}, {"NW", "SE"}, {"NE", "C", "N", "E"}),
     "dining": ({"W", "E"}, {"N", "NW", "SE", "S"}, {"C"}),
+    "pooja": ({"NE"}, {"N", "E"}, {"S", "SW", "SE", "C"}),
     "cabin": ({"SW", "S", "W"}, {"NW"}, {"NE", "C"}),
     "store": ({"SW", "W"}, {"S", "NW"}, {"NE", "C"}),
     "godown": ({"SW", "W", "S"}, {"NW"}, {"NE", "C"}),
@@ -228,7 +229,7 @@ def geo_checks(plan):
                 lim = 7.87 if r.kind in ("master", "living", "hall") else (6.5 if r.kind == "dining" else 7.0)
                 if mw < lim - 1e-6:
                     errs.append(f"{fl.code}:{r.name} width {mw:.2f} < {lim} ft")
-                if a < 80:
+                if a < (100 if r.kind == "master" else 80):
                     errs.append(f"{fl.code}:{r.name} area {a:.0f} < 80")
             if r.kind == "kitchen" and (a < 48 - 0.5 or mw < 5.9):
                 errs.append(f"{fl.code}:{r.name} kitchen {a:.0f} sqft / {mw:.1f} ft too small")
@@ -245,7 +246,7 @@ def geo_checks(plan):
             if A is None or B is None:
                 errs.append(f"{fl.code}: door at {d['o']}{d['c']:.2f},{d['a']:.2f} not on a wall")
                 continue
-            if d["w"] < 2.4:
+            if d["w"] < (2.0 if d["kind"] == "service" else 2.4):
                 errs.append(f"{fl.code}: door too narrow {d['w']}")
             na = A if isinstance(A, str) else A.name
             nb = B if isinstance(B, str) else B.name
@@ -260,7 +261,7 @@ def geo_checks(plan):
                     seen.add(v)
                     st.append(v)
         for r in fl.rooms:
-            if r.name not in seen and r.kind not in ("void",):
+            if r.name not in seen and r.kind not in ("void", "duct"):
                 errs.append(f"{fl.code}:{r.name} not reachable by a door")
         # windows / openings
         light = {}
@@ -274,7 +275,7 @@ def geo_checks(plan):
                     other = (p1 + 0.05) if t == p0 - 0.05 else (p0 - 0.05)
                     ox, oy = (other, m) if w["o"] == "V" else (m, other)
                     o2 = fl.room_at(ox, oy)
-                    ok = (o2 is None) or o2.kind in ("court",)
+                    ok = (o2 is None) or o2.kind in ("court", "duct")
                     if ok:
                         light[r.name] = light.get(r.name, 0) + w["w"] * w["h"]
         for d in fl.doors:

@@ -195,7 +195,7 @@ def terrace(var, facing, mirror):
           ("flight", SX0, SX1, 26.38, YF2, 12, "UP")]
     ex = [e for e in ex if e[0] != "flight"]
     ex.append(("text", 9.5, 22.2, "OPEN TERRACE", 9))
-    used = [MUM, CT]
+    used = [MUM, CT, (10.3, 41.2, 15.0, 45.9)]
     notes = []
     tk = _pick("tank", facing, mirror, used)
     used.append(tk[1])
