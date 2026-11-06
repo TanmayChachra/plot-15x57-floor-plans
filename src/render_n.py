@@ -77,7 +77,9 @@ def room_rows(fl):
         xs = [q[0] for q in r.rects] + [q[2] for q in r.rects]
         ys = [q[1] for q in r.rects] + [q[3] for q in r.rects]
         w, l = max(xs) - min(xs), max(ys) - min(ys)
-        if len(r.rects) == 1:
+        if len(r.rects) > 3:
+            rows.append(f"{r.name} (irregular, {len(r.rects)} parts) = {r.area():.0f} sq ft")
+        elif len(r.rects) == 1:
             rows.append(f"{r.name}: {fi(w)} x {fi(l)} = {r.area():.0f} sq ft")
         else:
             parts = " + ".join(f"{fi(q[2] - q[0])} x {fi(q[3] - q[1])}" for q in r.rects)
@@ -164,11 +166,13 @@ def render_n(plan, idx, vs, errs, path):
     add("ROOM SIZES, FIRST FLOOR (clear)", True, 10)
     for t in room_rows(f):
         add(t)
-    add("Court (open to sky): 6'-0\" x 8'-0\" = 48 sq ft")
+    nc = plan.get("nc", False)
+    if not nc:
+        add("Court (open to sky): 6'-0\" x 8'-0\" = 48 sq ft")
     add()
     add("SERVICES DUCT (kitchen, toilet, electrical risers)", True, 10)
-    add("Size 4'-0\" x 3'-11\" = 15.7 sq ft (1.46 sq m), open to sky at the terrace")
-    add("Runs ground to terrace between the kitchen and the toilet.")
+    add(plan.get("duct_txt") or "Size 4'-0\" x 3'-11\" = 15.7 sq ft (1.46 sq m), open to sky at the terrace")
+    add("Runs ground to terrace between the kitchen and the toilet." if not nc else "Runs ground to terrace between the common washroom and the kitchen.")
     add("Kitchen window and toilet ventilator open into it. It carries")
     add("water supply, waste, soil and vent pipes, gas line, electrical")
     add("conduits and meter risers. Access: ground floor service door")
@@ -192,9 +196,14 @@ def render_n(plan, idx, vs, errs, path):
         mark = {"ideal": "+", "acceptable": "~", "compromise": "-", "AVOID": "X"}[lv]
         add(f"[{mark}] {fc}  {nm}: {z} ({lv})")
     add(f"Score {vs['pts']}/{vs['mx']}    + ideal   ~ acceptable   - compromise   X avoid")
-    add("Brahmasthan (centre) kept open to sky as the court.")
+    if nc:
+        add("No open court: the centre is built over. Hall and passage are lit")
+        add("by closed skylights in the terrace slab (glazed, no rain, no lost")
+        add("floor). Living room has no wall window: bylaw risk, check locally.")
+    else:
+        add("Brahmasthan (centre) kept open to sky as the court.")
     add("Common washroom falls in the east third: vastu compromise,")
-    add("unavoidable here (only spot with a window, off the hall).")
+    add("unavoidable here (it must open off the hall or passage).")
     add()
     add("CHECKS (run by script)", True, 10)
     add("0 errors" if not errs else f"{len(errs)} errors")

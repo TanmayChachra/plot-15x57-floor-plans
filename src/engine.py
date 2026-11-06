@@ -288,6 +288,8 @@ def geo_checks(plan):
                 for X, Y in ((A, B), (B, A)):
                     if X is not None and not isinstance(X, str) and (isinstance(Y, str) or Y.kind == "court"):
                         light[X.name] = light.get(X.name, 0) + d["w"] * (7.0 if d["kind"] == "shutter" else 6.5)
+        for nm_, a_ in getattr(fl, "sky", {}).items():
+            light[nm_] = light.get(nm_, 0) + a_
         for r in fl.rooms:
             need = {"master": 1 / 6, "bed": 1 / 6, "living": 1 / 6, "hall": 1 / 8, "hall2": 1 / 10, "guest": 1 / 10, "dining": 1 / 8, "cabin": 1 / 8,
                     "kitchen": 1 / 8, "toilet": 1 / 10, "wc": 1 / 10, "shop": 1 / 10}.get(r.kind)

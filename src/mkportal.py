@@ -11,7 +11,7 @@ if os.path.exists("docs/index.html") and not os.path.exists("docs/north-v1.html"
     open("docs/north-v1.html", "w", encoding="utf-8").write(s)
 
 html = r"""<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>20 north-facing floor plans, 15.4 x 57.6 ft plot</title>
+<title>North-facing floor plans, 15.4 x 57.6 ft plot</title>
 <style>
 :root{--bg:#f4f1ea;--ink:#222;--mut:#666;--card:#fff;--line:#ddd;--acc:#b5651d}
 *{box-sizing:border-box}body{margin:0;font:15px/1.45 system-ui,Segoe UI,sans-serif;background:var(--bg);color:var(--ink)}
@@ -45,16 +45,16 @@ section.note{padding:0 20px 30px;max-width:980px}section.note li{margin:4px 0}
 #hint{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);background:#000a;padding:5px 12px;border-radius:14px;font-size:12px;color:#ddd;z-index:2;transition:opacity .6s;pointer-events:none}
 label.lk{font-size:13px;color:#ccc;display:flex;align-items:center;gap:5px}
 </style></head><body>
-<header><h1>20 north-facing floor plans: plot 15.4 x 57.6 ft, road on the 15.4 ft north side</h1>
-<p>Ground floor shop, first floor 2 bedroom home, terrace. One bedroom has an attached toilet; a common washroom opens off the living hall, outside both bedrooms, so guests can use it. Services duct (open to sky) sits between kitchen and toilet. Click any plan to open the viewer: zoom, drag, and move through all 20 with the arrow keys or the film strip, keeping your zoom. <a href="north-v1.html">Earlier north set</a> | <a href="other-facings.html">East, South, West sets</a></p></header>
+<header><h1>North-facing floor plans: plot 15.4 x 57.6 ft, road on the 15.4 ft north side</h1>
+<p>Ground floor shop, first floor 2 bedroom home, terrace. One bedroom has an attached toilet; a common washroom opens off the living hall, outside both bedrooms, so guests can use it. Services duct (open to sky) sits between kitchen and toilet. Plans 1 to 20 have a small open court in the centre. Plans 21 to 28 have NO court: the centre is built over and lit by closed skylights, so no floor is lost. Click any plan to open the viewer: zoom, drag, and move through all plans with the arrow keys or the film strip, keeping your zoom. <a href="north-v1.html">Earlier north set</a> | <a href="other-facings.html">East, South, West sets</a></p></header>
 <div class="bar"><b>Show</b>
 <button class="chip on" data-m="sheet">Full sheets</button><button class="chip" data-m="first">First floors</button><button class="chip" data-m="ground">Ground floors</button>
 <span class="sp"></span><b>Filter</b>
-<button class="chip on" data-f="all">All 20</button><button class="chip" data-f="rear">Master at rear</button><button class="chip" data-f="front">Master at front</button><button class="chip" data-f="bal">With balcony</button>
+<button class="chip on" data-f="all">All</button><button class="chip" data-f="nc">No court (21 to 28)</button><button class="chip" data-f="court">With court (1 to 20)</button><button class="chip" data-f="rear">Master at rear</button><button class="chip" data-f="front">Master at front</button><button class="chip" data-f="bal">With balcony</button>
 <b>Size</b><button class="chip" id="sm">&minus;</button><button class="chip" id="lg">+</button></div>
 <main id="g"></main>
 <section class="note"><h2>Read this first</h2><ul>
-<li>Fixed by the plot: stair on the west wall starting at the front, 9'-0" shop front, court at the centre, duct stack in the east rear, 5 ft rear yard. What changes between plans: which bedroom is at the front, a front balcony, kitchen layout, living and dining layout, court feature, door swings, shop rear (store, cabin with toilet, two stores, store with loft), shutter style, shop fittings and terrace.</li>
+<li>No-court plans (21 to 28): the 6 x 8 ft open court is gone and its floor is now a common washroom (6'-0" x 4'-4"), a small services duct (6'-0" x 3'-4") and a bigger living-dining (154 sq ft). The hall and passage are lit by closed glazed skylights in the terrace slab. The living room then has no wall window, which many bylaws do not accept for a habitable room, so confirm locally or choose a court plan.</li><li>Fixed by the plot: stair on the west wall starting at the front, 9'-0" shop front, court at the centre, duct stack in the east rear, 5 ft rear yard. What changes between plans: which bedroom is at the front, a front balcony, kitchen layout, living and dining layout, court feature, door swings, shop rear (store, cabin with toilet, two stores, store with loft), shutter style, shop fittings and terrace.</li>
 <li>Common washroom (WC and basin, 3'-6" x 5'-8") opens off the hall next to the court. It falls in the east third, a vastu compromise. It was the only spot with a window that is outside both bedrooms.</li>
 <li>Both bedrooms are 111 to 115 sq ft (87 sq ft with a balcony). Living and dining is an L-shaped 130 sq ft.</li>
 <li>Assumed: road in front, party walls both sides, 5 ft rear yard. Confirm setbacks, plinth and court and duct sizes with local bylaws, an architect and a structural engineer. Furniture is indicative.</li>
@@ -77,12 +77,12 @@ const g = document.getElementById('g'), v = document.getElementById('v'), stage 
 let mode = 'sheet', filt = 'all', cur = 0, view = 'sheet', S = 1, TX = 0, TY = 0, lastW = 0, lastH = 0;
 const keyOf = {sheet:'sheet', first:'first', ground:'ground'};
 const thumbOf = (x, m) => m === 'sheet' ? x.thumb : x[m].replace('.webp', '-thumb.webp');
-function match(x){ return filt==='all' || (filt==='rear'&&x.role==='Master at rear') || (filt==='front'&&x.role==='Master at front') || (filt==='bal'&&x.balcony); }
+function match(x){ return filt==='all' || (filt==='rear'&&x.role==='Master at rear') || (filt==='front'&&x.role==='Master at front') || (filt==='bal'&&x.balcony) || (filt==='nc'&&x.nc) || (filt==='court'&&!x.nc); }
 function draw(){
   g.innerHTML = '';
   D.forEach((x,i)=>{ if(!match(x)) return;
     const c = document.createElement('div'); c.className='card';
-    c.innerHTML = '<img loading="lazy" src="'+thumbOf(x,mode)+'" alt="Plan '+x.n+'"><div class="t"><b>Plan '+String(x.n).padStart(2,'0')+'</b> <span class="tag">'+x.role+'</span>'+(x.balcony?'<span class="tag">balcony</span>':'')+'<span class="tag">vastu '+x.score+'</span><br><span style="color:#666">'+x.commercial+' sq ft shop, '+x.residential+' sq ft home</span></div>';
+    c.innerHTML = '<img loading="lazy" src="'+thumbOf(x,mode)+'" alt="Plan '+x.n+'"><div class="t"><b>Plan '+String(x.n).padStart(2,'0')+'</b> <span class="tag">'+x.role+'</span>'+(x.balcony?'<span class="tag">balcony</span>':'')+(x.nc?'<span class="tag" style="background:#cfe9f5">no court</span>':'')+'<span class="tag">vastu '+x.score+'</span><br><span style="color:#666">'+x.commercial+' sq ft shop, '+x.residential+' sq ft home</span></div>';
     c.onclick = ()=>openV(i); g.appendChild(c); });
 }
 document.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{mode=b.dataset.m;document.querySelectorAll('[data-m]').forEach(q=>q.classList.toggle('on',q===b));

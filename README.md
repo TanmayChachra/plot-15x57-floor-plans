@@ -6,6 +6,12 @@ Gallery: see the GitHub Pages link in the repository description. Full sheets ar
 
 
 
+
+## Update 3: no-court designs (plans 21 to 28)
+- The 6 x 8 ft open court is removed. Its floor holds a common washroom (6'-0" x 4'-4"), a services duct (6'-0" x 3'-4") between that washroom and the kitchen, and a larger living-dining (154 sq ft).
+- Hall and passage are lit by closed glazed skylights in the terrace slab. The living room has no wall window: many bylaws do not accept that for a habitable room, so confirm locally.
+- Built by `src/layouts_n4.py`, `src/specs_n4.py`, `src/gen_n4.py`.
+
 ## Update 2: 20 varied north-facing designs with a viewer
 - `docs/designs/`: 20 plans. One bedroom has an attached toilet; a common washroom (WC and basin, 3'-6" x 5'-8") opens off the living hall, outside both bedrooms. Services duct between kitchen and toilet.
 - Variation per plan: which bedroom is at the front, front balcony, kitchen type, living layout, court feature, door swings, shop rear (4 types), shutter style, shop fittings, terrace (4 types). Built by `src/layouts_n3.py` and `src/specs_n3.py`; sheets by `src/gen_n3.py`.
