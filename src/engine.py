@@ -36,11 +36,11 @@ def fi(v):
     return f"{i // 12}'-{i % 12}\""
 
 
-COLORS = dict(shop="#F7E6C4", store="#E8DCC4", toilet="#CDE7F1", wc="#CDE7F1", cabin="#E9DDF0", godown="#E8DCC4",
+COLORS = dict(guest="#CDE7F1", hall2="#F9EBC8", duct="#FFFFFF", shop="#F7E6C4", store="#E8DCC4", toilet="#CDE7F1", wc="#CDE7F1", cabin="#E9DDF0", godown="#E8DCC4",
               living="#FBF2D5", dining="#F9EBC8", hall="#F9EBC8", kitchen="#FFDDC9", bed="#DDE7F6", master="#D3E0F5",
               pooja="#FFEFAE", stair="#E4E4E4", court="#CFE6B8", passage="#F3F3F3", terrace="#ECE4D6", mumty="#E4E4E4",
               tank="#B9D7F0", solar="#F4D77A", garden="#CFE6B8", utility="#E8DCC4", void="#FFFFFF")
-HAB = {"living", "dining", "hall", "bed", "master", "cabin"}
+HAB = {"living", "dining", "hall", "hall2", "bed", "master", "cabin"}
 
 
 class Room:
@@ -142,6 +142,8 @@ VASTU = {  # kind -> (ideal, acceptable, forbidden); anything else is a compromi
     "bed": ({"W", "NW"}, {"SW", "S", "N", "E"}, {"NE", "C"}),
     "living": ({"N", "NE", "E"}, {"NW", "W"}, {"C"}),
     "hall": ({"W", "E", "N"}, {"NW", "NE", "SE"}, set()),
+    "hall2": ({"W", "E", "N"}, {"NW", "NE", "SE"}, set()),
+    "guest": ({"NW", "W"}, {"S"}, {"NE", "C", "SW"}),
     "stair": ({"S", "W", "SW"}, {"NW", "SE"}, {"NE", "C", "N", "E"}),
     "dining": ({"W", "E"}, {"N", "NW", "SE", "S"}, {"C"}),
     "pooja": ({"NE"}, {"N", "E"}, {"S", "SW", "SE", "C"}),
@@ -225,8 +227,8 @@ def geo_checks(plan):
         for r in fl.rooms:
             a = r.area()
             mw = r.minwidth()
-            if r.kind in ("master", "bed", "living", "hall", "dining", "cabin"):
-                lim = 7.87 if r.kind in ("master", "living", "hall") else (6.5 if r.kind == "dining" else 7.0)
+            if r.kind in ("master", "bed", "living", "hall", "hall2", "dining", "cabin"):
+                lim = 7.87 if r.kind in ("master", "living", "hall", "hall2") else (6.5 if r.kind == "dining" else 7.0)
                 if mw < lim - 1e-6:
                     errs.append(f"{fl.code}:{r.name} width {mw:.2f} < {lim} ft")
                 if a < (100 if r.kind == "master" else 80):
@@ -235,6 +237,8 @@ def geo_checks(plan):
                 errs.append(f"{fl.code}:{r.name} kitchen {a:.0f} sqft / {mw:.1f} ft too small")
             if r.kind == "toilet" and (a < 23.5 or mw < 3.94):
                 errs.append(f"{fl.code}:{r.name} toilet {a:.0f} sqft / {mw:.2f} ft too small")
+            if r.kind == "guest" and (a < 17 or mw < 3.3):
+                errs.append(f"{fl.code}:{r.name} guest wc {a:.0f} sqft / {mw:.2f} ft too small")
             if r.kind == "wc" and (a < 11.8 or mw < 2.95):
                 errs.append(f"{fl.code}:{r.name} wc too small")
             if r.kind == "passage" and mw < 3.0:
@@ -246,7 +250,7 @@ def geo_checks(plan):
             if A is None or B is None:
                 errs.append(f"{fl.code}: door at {d['o']}{d['c']:.2f},{d['a']:.2f} not on a wall")
                 continue
-            if d["w"] < (2.0 if d["kind"] == "service" else 2.4):
+            if d["w"] < (2.0 if d["kind"] in ("service", "fdoor") else 2.4):
                 errs.append(f"{fl.code}: door too narrow {d['w']}")
             na = A if isinstance(A, str) else A.name
             nb = B if isinstance(B, str) else B.name
@@ -285,7 +289,7 @@ def geo_checks(plan):
                     if X is not None and not isinstance(X, str) and (isinstance(Y, str) or Y.kind == "court"):
                         light[X.name] = light.get(X.name, 0) + d["w"] * (7.0 if d["kind"] == "shutter" else 6.5)
         for r in fl.rooms:
-            need = {"master": 1 / 6, "bed": 1 / 6, "living": 1 / 6, "hall": 1 / 8, "dining": 1 / 8, "cabin": 1 / 8,
+            need = {"master": 1 / 6, "bed": 1 / 6, "living": 1 / 6, "hall": 1 / 8, "hall2": 1 / 10, "guest": 1 / 10, "dining": 1 / 8, "cabin": 1 / 8,
                     "kitchen": 1 / 8, "toilet": 1 / 10, "wc": 1 / 10, "shop": 1 / 10}.get(r.kind)
             if need and light.get(r.name, 0) < need * r.area() - 1e-6:
                 errs.append(f"{fl.code}:{r.name} openings {light.get(r.name, 0):.1f} < {need * r.area():.1f} sqft")
@@ -430,11 +434,11 @@ def draw_floor(ax, fl, plan, facing, mirror, ox, oy, fs=6.5, show_dims=True):
         wd, ln = big[2] - big[0], big[3] - big[1]
         horiz, vert = (ln, wd) if facing in "EW" else (wd, ln)
         if len(r.rects) == 1:
-            dims = f"{fi(horiz)} x {fi(vert)}"
+            dims = f"{fi(horiz)} x {fi(vert)}" + (f"\n{r.area():.0f} sq ft" if r.area() >= 30 else "")
         else:
-            dims = f"{r.area():.0f} sq ft"
+            dims = f"L-shape, {r.area():.0f} sq ft"
         small = min(horiz, vert) < 4.6
-        txt = r.label + (f"\n{dims}" if show_dims and r.kind not in ("tank", "court", "stair", "terrace", "mumty") else "")
+        txt = r.label + (f"\n{dims}" if show_dims and not getattr(r, "nodim", False) and r.kind not in ("tank", "court", "stair", "terrace", "mumty") else "")
         ax.text(p[0], p[1], txt, fontsize=fs - (1.2 if small else 0), ha="center", va="center", zorder=7,
                 linespacing=1.0, color="#111")
     return T, ew, ns

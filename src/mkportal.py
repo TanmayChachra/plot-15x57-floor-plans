@@ -1,0 +1,153 @@
+import json, os, shutil
+
+m = json.load(open("docs/designs.json"))
+for x in m:
+    x.pop("spec", None)
+data = json.dumps(m)
+
+if os.path.exists("docs/index.html") and not os.path.exists("docs/north-v1.html"):
+    s = open("docs/index.html", encoding="utf-8").read()
+    s = s.replace("<h1>12 north-facing plans", "<h1>Earlier version: 12 north-facing plans (both bedrooms with attached toilets)", 1)
+    open("docs/north-v1.html", "w", encoding="utf-8").write(s)
+
+html = r"""<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>20 north-facing floor plans, 15.4 x 57.6 ft plot</title>
+<style>
+:root{--bg:#f4f1ea;--ink:#222;--mut:#666;--card:#fff;--line:#ddd;--acc:#b5651d}
+*{box-sizing:border-box}body{margin:0;font:15px/1.45 system-ui,Segoe UI,sans-serif;background:var(--bg);color:var(--ink)}
+header{padding:22px 20px 14px;background:#2b2b2b;color:#fff}h1{margin:0 0 6px;font-size:21px}header p{margin:0;opacity:.85;max-width:980px}
+header a{color:#ffd37a}
+.bar{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line);padding:10px 20px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.bar b{font-size:13px;color:var(--mut);margin-right:2px}
+.chip{border:1px solid #999;background:#fff;padding:5px 12px;border-radius:16px;cursor:pointer;font:inherit;font-size:13px}.chip.on{background:#2b2b2b;color:#fff;border-color:#2b2b2b}
+.sp{flex:1}
+main{display:grid;gap:14px;padding:16px 20px 30px;grid-template-columns:repeat(auto-fill,minmax(var(--w,440px),1fr))}
+.card{background:var(--card);border:1px solid var(--line);border-radius:8px;overflow:hidden;cursor:pointer;display:flex;flex-direction:column}
+.card:hover{box-shadow:0 3px 14px #0002}.card img{width:100%;display:block;background:#fafafa}
+.card .t{padding:8px 10px;font-size:13px}.card .t b{font-size:14px}.tag{display:inline-block;font-size:11px;padding:1px 7px;border-radius:9px;background:#ece4d0;margin:2px 3px 0 0}
+section.note{padding:0 20px 30px;max-width:980px}section.note li{margin:4px 0}
+/* viewer */
+#v{position:fixed;inset:0;background:#15171a;color:#eee;z-index:20;display:none;flex-direction:column;user-select:none}
+#v.open{display:flex}
+#top{display:flex;gap:6px;align-items:center;padding:8px 10px;background:#0f1114;flex-wrap:wrap}
+#top button,#top a{background:#272b31;color:#eee;border:1px solid #3a3f47;border-radius:6px;padding:6px 11px;cursor:pointer;font:inherit;font-size:13px;text-decoration:none}
+#top button.on{background:#b5651d;border-color:#b5651d}#top button:hover,#top a:hover{background:#363b43}
+#top .gap{flex:1}#ttl{font-weight:600;margin-right:8px;white-space:nowrap}
+#desc{padding:5px 12px;font-size:12.5px;color:#bbb;background:#101216;border-top:1px solid #23262b;line-height:1.35}
+#stage{position:relative;flex:1;overflow:hidden;touch-action:none;cursor:grab}
+#stage.drag{cursor:grabbing}
+#img{position:absolute;left:0;top:0;transform-origin:0 0;max-width:none;background:#fff;will-change:transform}
+.nav{position:absolute;top:50%;transform:translateY(-50%);width:46px;height:84px;border:none;border-radius:8px;background:#0008;color:#fff;font-size:30px;cursor:pointer;z-index:3}
+.nav:hover{background:#000b}#prev{left:8px}#next{right:8px}
+#film{display:flex;gap:6px;padding:7px 8px;overflow-x:auto;background:#0f1114;border-top:1px solid #23262b}
+#film img{height:62px;border:2px solid transparent;border-radius:4px;cursor:pointer;opacity:.7;background:#fff;flex:none}
+#film img.cur{border-color:#b5651d;opacity:1}
+#hint{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);background:#000a;padding:5px 12px;border-radius:14px;font-size:12px;color:#ddd;z-index:2;transition:opacity .6s;pointer-events:none}
+label.lk{font-size:13px;color:#ccc;display:flex;align-items:center;gap:5px}
+</style></head><body>
+<header><h1>20 north-facing floor plans: plot 15.4 x 57.6 ft, road on the 15.4 ft north side</h1>
+<p>Ground floor shop, first floor 2 bedroom home, terrace. One bedroom has an attached toilet; a common washroom opens off the living hall, outside both bedrooms, so guests can use it. Services duct (open to sky) sits between kitchen and toilet. Click any plan to open the viewer: zoom, drag, and move through all 20 with the arrow keys or the film strip, keeping your zoom. <a href="north-v1.html">Earlier north set</a> | <a href="other-facings.html">East, South, West sets</a></p></header>
+<div class="bar"><b>Show</b>
+<button class="chip on" data-m="sheet">Full sheets</button><button class="chip" data-m="first">First floors</button><button class="chip" data-m="ground">Ground floors</button>
+<span class="sp"></span><b>Filter</b>
+<button class="chip on" data-f="all">All 20</button><button class="chip" data-f="rear">Master at rear</button><button class="chip" data-f="front">Master at front</button><button class="chip" data-f="bal">With balcony</button>
+<b>Size</b><button class="chip" id="sm">&minus;</button><button class="chip" id="lg">+</button></div>
+<main id="g"></main>
+<section class="note"><h2>Read this first</h2><ul>
+<li>Fixed by the plot: stair on the west wall starting at the front, 9'-0" shop front, court at the centre, duct stack in the east rear, 5 ft rear yard. What changes between plans: which bedroom is at the front, a front balcony, kitchen layout, living and dining layout, court feature, door swings, shop rear (store, cabin with toilet, two stores, store with loft), shutter style, shop fittings and terrace.</li>
+<li>Common washroom (WC and basin, 3'-6" x 5'-8") opens off the hall next to the court. It falls in the east third, a vastu compromise. It was the only spot with a window that is outside both bedrooms.</li>
+<li>Both bedrooms are 111 to 115 sq ft (87 sq ft with a balcony). Living and dining is an L-shaped 130 sq ft.</li>
+<li>Assumed: road in front, party walls both sides, 5 ft rear yard. Confirm setbacks, plinth and court and duct sizes with local bylaws, an architect and a structural engineer. Furniture is indicative.</li>
+</ul></section>
+
+<div id="v"><div id="top"><span id="ttl"></span>
+<button data-vm="sheet">Full sheet</button><button data-vm="first">First floor</button><button data-vm="ground">Ground floor</button>
+<span class="gap"></span>
+<button id="zo">&minus;</button><button id="zi">+</button><button id="fit">Fit</button><button id="z100">100%</button><button id="z200">200%</button>
+<label class="lk"><input type="checkbox" id="lock" checked>Keep zoom between plans</label>
+<a id="dl" download target="_blank">Open image</a><button id="fs">Fullscreen</button><button id="x">Close (Esc)</button></div>
+<div id="desc"></div>
+<div id="stage"><button class="nav" id="prev" aria-label="Previous">&#8249;</button><button class="nav" id="next" aria-label="Next">&#8250;</button>
+<img id="img" alt="" draggable="false"><div id="hint">Scroll to zoom, drag to move, arrow keys for next or previous plan, 1 2 3 to switch sheet, first, ground</div></div>
+<div id="film"></div></div>
+
+<script>
+const D = __DATA__;
+const g = document.getElementById('g'), v = document.getElementById('v'), stage = document.getElementById('stage'), img = document.getElementById('img');
+let mode = 'sheet', filt = 'all', cur = 0, view = 'sheet', S = 1, TX = 0, TY = 0, lastW = 0, lastH = 0;
+const keyOf = {sheet:'sheet', first:'first', ground:'ground'};
+const thumbOf = (x, m) => m === 'sheet' ? x.thumb : x[m].replace('.webp', '-thumb.webp');
+function match(x){ return filt==='all' || (filt==='rear'&&x.role==='Master at rear') || (filt==='front'&&x.role==='Master at front') || (filt==='bal'&&x.balcony); }
+function draw(){
+  g.innerHTML = '';
+  D.forEach((x,i)=>{ if(!match(x)) return;
+    const c = document.createElement('div'); c.className='card';
+    c.innerHTML = '<img loading="lazy" src="'+thumbOf(x,mode)+'" alt="Plan '+x.n+'"><div class="t"><b>Plan '+String(x.n).padStart(2,'0')+'</b> <span class="tag">'+x.role+'</span>'+(x.balcony?'<span class="tag">balcony</span>':'')+'<span class="tag">vastu '+x.score+'</span><br><span style="color:#666">'+x.commercial+' sq ft shop, '+x.residential+' sq ft home</span></div>';
+    c.onclick = ()=>openV(i); g.appendChild(c); });
+}
+document.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{mode=b.dataset.m;document.querySelectorAll('[data-m]').forEach(q=>q.classList.toggle('on',q===b));
+  document.documentElement.style.setProperty('--w', mode==='sheet'?'440px':'250px'); draw();});
+document.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{filt=b.dataset.f;document.querySelectorAll('[data-f]').forEach(q=>q.classList.toggle('on',q===b));draw();});
+let w = 440; const setW = d => { w = Math.max(160, Math.min(900, w + d)); document.documentElement.style.setProperty('--w', w+'px'); };
+document.getElementById('sm').onclick=()=>setW(-70); document.getElementById('lg').onclick=()=>setW(70);
+
+// film strip
+const film = document.getElementById('film');
+D.forEach((x,i)=>{ const t=document.createElement('img'); t.src=x.thumb; t.title='Plan '+x.n; t.onclick=()=>show(i); film.appendChild(t); });
+
+function apply(){ img.style.transform='translate('+TX+'px,'+TY+'px) scale('+S+')'; }
+function fitView(){ const W=stage.clientWidth,H=stage.clientHeight,iw=img.naturalWidth,ih=img.naturalHeight; if(!iw)return;
+  S=Math.min(W/iw,H/ih); TX=(W-iw*S)/2; TY=(H-ih*S)/2; apply(); }
+function zoomAt(f,cx,cy){ const ns=Math.max(0.05,Math.min(8,S*f)); const k=ns/S; TX=cx-(cx-TX)*k; TY=cy-(cy-TY)*k; S=ns; apply(); }
+function zoomC(f){ zoomAt(f, stage.clientWidth/2, stage.clientHeight/2); }
+function setScale(s){ const c=[stage.clientWidth/2, stage.clientHeight/2]; zoomAt(s/S,c[0],c[1]); }
+
+function show(i, keepView){
+  cur=(i+D.length)%D.length; const x=D[cur];
+  document.getElementById('ttl').textContent='Plan '+String(x.n).padStart(2,'0')+' / '+D.length;
+  document.getElementById('desc').textContent=x.desc+'  |  Vastu score '+x.score;
+  document.querySelectorAll('[data-vm]').forEach(b=>b.classList.toggle('on',b.dataset.vm===view));
+  const src=x[view]; document.getElementById('dl').href=src;
+  const keep=document.getElementById('lock').checked && lastW && keepView!==false;
+  img.onload=()=>{ if(keep && img.naturalWidth===lastW && img.naturalHeight===lastH){ apply(); } else { fitView(); }
+    lastW=img.naturalWidth; lastH=img.naturalHeight; };
+  img.src=src;
+  [...film.children].forEach((t,k)=>t.classList.toggle('cur',k===cur));
+  film.children[cur].scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'});
+  [(cur+1)%D.length,(cur-1+D.length)%D.length].forEach(k=>{ const p=new Image(); p.src=D[k][view]; });
+  history.replaceState(null,'','#'+(cur+1)+'/'+view);
+}
+function openV(i){ v.classList.add('open'); document.body.style.overflow='hidden'; lastW=0; show(i, false);
+  const h=document.getElementById('hint'); h.style.opacity=1; setTimeout(()=>h.style.opacity=0,4500); }
+function closeV(){ v.classList.remove('open'); document.body.style.overflow=''; history.replaceState(null,'',location.pathname); }
+function setView(m){ view=m; lastW=0; show(cur,false); }
+document.querySelectorAll('[data-vm]').forEach(b=>b.onclick=()=>setView(b.dataset.vm));
+document.getElementById('prev').onclick=()=>show(cur-1); document.getElementById('next').onclick=()=>show(cur+1);
+document.getElementById('x').onclick=closeV;
+document.getElementById('zi').onclick=()=>zoomC(1.35); document.getElementById('zo').onclick=()=>zoomC(1/1.35);
+document.getElementById('fit').onclick=fitView; document.getElementById('z100').onclick=()=>setScale(1); document.getElementById('z200').onclick=()=>setScale(2);
+document.getElementById('fs').onclick=()=>{ if(document.fullscreenElement) document.exitFullscreen(); else v.requestFullscreen&&v.requestFullscreen(); };
+stage.addEventListener('wheel',e=>{ e.preventDefault(); const r=stage.getBoundingClientRect(); zoomAt(Math.exp(-e.deltaY*0.0016), e.clientX-r.left, e.clientY-r.top); },{passive:false});
+stage.addEventListener('dblclick',e=>{ const r=stage.getBoundingClientRect(); if(S<0.9) { zoomAt(1/S, e.clientX-r.left, e.clientY-r.top);} else fitView(); });
+// pointer pan + pinch
+const P=new Map(); let pd=0;
+stage.addEventListener('pointerdown',e=>{ if(e.target.closest('.nav'))return; stage.setPointerCapture(e.pointerId); P.set(e.pointerId,[e.clientX,e.clientY]); stage.classList.add('drag'); pd=0; });
+stage.addEventListener('pointermove',e=>{ if(!P.has(e.pointerId))return; const o=P.get(e.pointerId); const n=[e.clientX,e.clientY];
+  if(P.size===1){ TX+=n[0]-o[0]; TY+=n[1]-o[1]; apply(); }
+  else if(P.size===2){ const ids=[...P.keys()]; const a=P.get(ids[0]), b=P.get(ids[1]); const old=Math.hypot(a[0]-b[0],a[1]-b[1]);
+    P.set(e.pointerId,n); const a2=P.get(ids[0]), b2=P.get(ids[1]); const nw=Math.hypot(a2[0]-b2[0],a2[1]-b2[1]); const r=stage.getBoundingClientRect();
+    if(old>0) zoomAt(nw/old,(a2[0]+b2[0])/2-r.left,(a2[1]+b2[1])/2-r.top); }
+  P.set(e.pointerId,n); });
+const up=e=>{ P.delete(e.pointerId); if(!P.size) stage.classList.remove('drag'); };
+stage.addEventListener('pointerup',up); stage.addEventListener('pointercancel',up);
+window.addEventListener('keydown',e=>{ if(!v.classList.contains('open'))return;
+  const k=e.key; if(k==='Escape')closeV(); else if(k==='ArrowRight')show(cur+1); else if(k==='ArrowLeft')show(cur-1);
+  else if(k==='+'||k==='=')zoomC(1.25); else if(k==='-')zoomC(0.8); else if(k==='0')fitView(); else if(k==='1')setView('sheet'); else if(k==='2')setView('first'); else if(k==='3')setView('ground');
+  else if(k==='ArrowUp'){TY+=80;apply();} else if(k==='ArrowDown'){TY-=80;apply();} else return; e.preventDefault(); });
+window.addEventListener('resize',()=>{ if(v.classList.contains('open')) fitView(); });
+draw();
+const hm=location.hash.match(/#(\d+)\/(sheet|first|ground)/); if(hm){ view=hm[2]; openV(Math.min(D.length,+hm[1])-1); }
+</script></body></html>"""
+html = html.replace("__DATA__", data)
+open("docs/index.html", "w", encoding="utf-8").write(html)
+print("ok", len(html))

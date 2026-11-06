@@ -5,6 +5,14 @@ Ground floor commercial, first floor residential, terrace at second floor level.
 Gallery: see the GitHub Pages link in the repository description. Full sheets are in `docs/plans/`.
 
 
+
+## Update 2: 20 varied north-facing designs with a viewer
+- `docs/designs/`: 20 plans. One bedroom has an attached toilet; a common washroom (WC and basin, 3'-6" x 5'-8") opens off the living hall, outside both bedrooms. Services duct between kitchen and toilet.
+- Variation per plan: which bedroom is at the front, front balcony, kitchen type, living layout, court feature, door swings, shop rear (4 types), shutter style, shop fittings, terrace (4 types). Built by `src/layouts_n3.py` and `src/specs_n3.py`; sheets by `src/gen_n3.py`.
+- The portal (`docs/index.html`) has a full-screen viewer: scroll to zoom, drag to pan, arrow keys or film strip to move through all 20 while keeping the zoom, 1/2/3 to switch full sheet, first floor, ground floor.
+- The common washroom falls in the east third (vastu compromise); it was the only spot with a window outside both bedrooms.
+- Earlier north set: `docs/north-v1.html`. First set for all facings: `docs/other-facings.html`.
+
 ## Update: north-facing set (road on the 15.4 ft north side)
 12 plans in `docs/north/`, built by `src/layouts_n.py`, `src/render_n.py`, `src/gen_n.py`.
 - 2 bedrooms on the first floor, each with an attached toilet, plus living-dining, kitchen, open court, passage.

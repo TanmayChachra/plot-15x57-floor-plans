@@ -4,10 +4,10 @@ from collections import Counter
 from layouts_n import *
 from PIL import Image
 
-NAMES_G = {"GA": "Open shop, store/pantry and staff toilet at rear",
+NAMES_G = {"GE": "Open shop, store with loft and staff toilet at rear", "GA": "Open shop, store/pantry and staff toilet at rear",
            "GB": "Open shop, owner cabin with attached toilet at rear",
            "GC": "Open shop, store and pantry, staff toilet, rear service door"}
-NAMES_F = {"A": "Front Bedroom 2 (with toilet), Master Bedroom at rear (with toilet)",
+NAMES_F = {"V2": "Master Bedroom at rear with attached toilet, Bedroom 2 at front, common washroom off the living hall (outside both bedrooms)", "A": "Front Bedroom 2 (with toilet), Master Bedroom at rear (with toilet)",
            "D": "Front Master Bedroom (with toilet), Bedroom 2 at rear (with toilet)"}
 S_IN = 0.21
 GAP = 15.0
@@ -80,7 +80,8 @@ def room_rows(fl):
         if len(r.rects) == 1:
             rows.append(f"{r.name}: {fi(w)} x {fi(l)} = {r.area():.0f} sq ft")
         else:
-            rows.append(f"{r.name}: L-shape {fi(w)} x {fi(l)} overall = {r.area():.0f} sq ft")
+            parts = " + ".join(f"{fi(q[2] - q[0])} x {fi(q[3] - q[1])}" for q in r.rects)
+            rows.append(f"{r.name} (L-shape): {parts} = {r.area():.0f} sq ft")
     return rows
 
 
@@ -111,7 +112,7 @@ def carpet(fl):
 def render_n(plan, idx, vs, errs, path):
     fls = plan["floors"]
     ew, ns = W, D
-    pw = 74.0
+    pw = 84.0
     tw, th = 8 + 3 * ew + 2 * GAP + 8 + pw, ns + 34
     offs = [(10 + i * (ew + GAP), 14) for i in range(3)]
     px = 10 + 3 * ew + 2 * GAP + 6
@@ -121,14 +122,14 @@ def render_n(plan, idx, vs, errs, path):
     ax.set_ylim(0, th)
     ax.set_aspect("equal")
     ax.axis("off")
-    ax.text(8, th - 3.2, f"PLAN N-{idx:02d}  |  NORTH-FACING, ROAD ON THE 15.4 ft NORTH SIDE  |  PLOT 15.4 ft x 57.6 ft  |  GROUND SHOP, FIRST FLOOR 2 BEDROOM HOME, TERRACE",
+    ax.text(8, th - 3.2, f"PLAN {plan.get("tag", "N")}-{idx:02d}  |  NORTH-FACING, ROAD ON THE 15.4 ft NORTH SIDE  |  PLOT 15.4 ft x 57.6 ft  |  GROUND SHOP, FIRST FLOOR 2 BEDROOM HOME, TERRACE",
             fontsize=13, fontweight="bold", va="center")
-    ax.text(8, th - 6.4, f"Ground: {NAMES_G[plan['g'][0]]}.   First: {NAMES_F[plan['f'][0]]}{', with pooja' if plan['f'][1] else ''}.   Services duct (open to sky) between kitchen and toilet.   North is up.",
+    ax.text(8, th - 6.4, plan.get("desc") or f"Ground: {NAMES_G[plan['g'][0]]}.   First: {NAMES_F[plan['f'][0]]}{', with pooja' if plan['f'][1] else ''}.   Services duct (open to sky) between kitchen and toilet.   North is up.",
             fontsize=9, va="center", color="#333")
     ax.text(8, th - 9.0, "All room sizes are clear internal sizes in feet-inches. Walls: 9 in outer, 4.5 in inner. Chains A, B, C, D on each plan (red dotted lines) give clear lengths along that line; segments without a figure are walls.",
             fontsize=8, va="center", color="#555")
     for fl, (ox, oy) in zip(fls, offs):
-        T, _, _ = draw_floor(ax, fl, plan, "N", True, ox, oy, fs=8.3)
+        T, _, _ = draw_floor(ax, fl, plan, "N", True, ox, oy, fs=9.6)
         quad = [T(-1.5, -5.2), T(W + 1.5, -5.2), T(W + 1.5, -0.2), T(-1.5, -0.2)]
         ax.add_patch(Polygon(quad, closed=True, fc="#BDBDBD", ec="none", zorder=0.5))
         rc = T(W / 2, -2.7)
@@ -146,7 +147,7 @@ def render_n(plan, idx, vs, errs, path):
     g, f = fls[0], fls[1]
     L_ = []
 
-    def add(t="", b=False, sz=8.5):
+    def add(t="", b=False, sz=9.5):
         L_.append((t, b, sz))
     st = stair_info()
     add("AREA STATEMENT", True, 10)
@@ -192,6 +193,8 @@ def render_n(plan, idx, vs, errs, path):
         add(f"[{mark}] {fc}  {nm}: {z} ({lv})")
     add(f"Score {vs['pts']}/{vs['mx']}    + ideal   ~ acceptable   - compromise   X avoid")
     add("Brahmasthan (centre) kept open to sky as the court.")
+    add("Common washroom falls in the east third: vastu compromise,")
+    add("unavoidable here (only spot with a window, off the hall).")
     add()
     add("CHECKS (run by script)", True, 10)
     add("0 errors" if not errs else f"{len(errs)} errors")
